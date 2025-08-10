@@ -1,0 +1,43 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::resby-faisal-bucket0001",
+                "arn:aws:s3:::resby-faisal-bucket0001/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:PrincipalArn": "arn:aws:iam::872515279375:role/OIDC-Role_Faisal"
+                }
+            }
+        },
+        {
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::resby-faisal-bucket0001",
+                "arn:aws:s3:::resby-faisal-bucket0001/*"
+            ],
+            "Condition": {
+                "StringNotEquals": {
+                    "aws:PrincipalArn": "arn:aws:iam::872515279375:role/OIDC-Role_Faisal"
+                }
+            }
+        }
+    ] 
+}
