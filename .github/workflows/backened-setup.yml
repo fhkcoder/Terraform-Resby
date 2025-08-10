@@ -33,10 +33,10 @@ jobs:
         run: |
           echo "Checking if backend state exists in S3..."
           aws s3 ls s3://resby-faisal-bucket0001/terraform.tfstate || {
-            echo "❌ Backend state file not found in S3!"
+            echo "ERROR!!!! Backend state file not found in S3!"
             exit 1
           }
-          echo "✅ Backend state file found in S3"
+          echo "SUCCESS. Backend state file found in S3"
 
 
       - name: Terraform Plan

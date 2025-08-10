@@ -1,19 +1,19 @@
-### Create OIDC Provider for Github
+## Create OIDC Provider for Github
 
-## OIDC provider
+### OIDC provider
 ```sh
 aws iam create-open-id-connect-provider \
 --cli-input-json file://oidc-provider.json
 ```
 
-## OIDC provider role
+### OIDC provider role
 ```sh
 aws iam create-role \
 --role-name OIDC-Role_Faisal  \
 --assume-role-policy-document file://oidc-role-trust-policy.json
 ```
 
-## OIDC role permision policy
+### OIDC role permision policy
 ```sh
 aws iam create-policy \
 --policy-name OIDC-permission-policy \
@@ -26,7 +26,7 @@ aws iam attach-role-policy \
 --policy-arn arn:aws:iam::872515279375:policy/OIDC-permission-policy
 ```
 
-## Create an S3 bucket for backend with versioning enabled
+### Create an S3 bucket for backend with versioning enabled
 ```sh
 aws s3api create-bucket \
 --bucket resby-faisal-bucket0001 \
@@ -38,12 +38,12 @@ aws s3api put-bucket-versioning \
 --versioning-configuration Status=Enabled
 ```
 
-## Remove Public Access Block to implement bucket policy
+### Remove Public Access Block to implement bucket policy
 ```sh
 aws s3api delete-public-access-block --bucket resby-faisal-bucket0001
 ```
 
-## Restricting anyone else apart from the OIDC Role to access the bucket
+### Restricting anyone else apart from the OIDC Role to access the bucket
 ```sh
 aws s3api put-bucket-policy \
 --bucket resby-faisal-bucket0001 \
