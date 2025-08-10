@@ -1,4 +1,4 @@
-module "vpc" {
+/*module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
   name = "resby-vpc"
@@ -15,4 +15,4 @@ module "vpc" {
     Terraform = "true"
     Environment = "dev"
   }
-}
+}*/
