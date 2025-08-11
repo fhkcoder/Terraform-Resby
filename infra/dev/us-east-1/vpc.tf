@@ -1,18 +1,18 @@
-/*module "vpc" {
+module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
+  version = "6.0.1"
+  
+  for_each = local.vpcs_to_create
 
-  name = "resby-vpc"
-  cidr = "10.0.0.0/16"
+  name = each.value.name
+  cidr = each.value.cidr
 
-  azs             = [vars.zone1, vars.zone2]
-  private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+  azs             = each.value.azs
+  private_subnets = each.value.private_subnets
+  public_subnets  = each.value.public_subnets
 
-  enable_nat_gateway = true
-  enable_vpn_gateway = true
+  enable_nat_gateway = each.value.enable_nat_gateway
+  enable_vpn_gateway = each.value.enable_vpn_gateway
+  single_nat_gateway = each.value.single_nat_gateway
 
-  tags = {
-    Terraform = "true"
-    Environment = "dev"
   }
-}*/
