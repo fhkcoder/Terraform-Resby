@@ -116,5 +116,45 @@ locals {
       ]
       egress_rules = ["all-all"]
     }
+
+    redis = {
+      create      = var.create_redis > 0
+      name        = "${local.name}-redis"
+      description = "Security group for redis-elasticache"
+      ingress_with_cidr_blocks = [
+        {
+          from_port   = 6379
+          to_port     = 6379
+          protocol    = "tcp"
+          description = "Cache store from ec2 instances"
+          cidr_blocks = local.vpcs.main.cidr
+        }
+      ]
+    }
   }
+
+
+  ##################################################################################################################################
+  #Redis Elasticache Configuration
+  ##################################################################################################################################
+
+  redis_to_create = {
+    for k, v in local.redis : k => v if v.create
+  }
+
+  redis = {
+    main = {
+      create                   = var.create_redis > 0
+      cluster_id               = "${local.name}-redis"
+      create_cluster           = true
+      create_replication_group = false
+
+      engine_version = "7.1"
+      node_type      = "cache.t4g.small"
+
+      maintenance_window = "sun:05:00-sun:09:00"
+      apply_immediately  = true
+    }
+  }
+
 }

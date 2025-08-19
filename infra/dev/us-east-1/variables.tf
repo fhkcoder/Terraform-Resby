@@ -21,3 +21,9 @@ variable "create_ec2_security_group" {
   type        = number
   default     = 0
 }
+
+variable "create_redis" {
+  description = "Set to 1 to create redis, 0 to skip"
+  type        = number
+  default     = 0
+}
