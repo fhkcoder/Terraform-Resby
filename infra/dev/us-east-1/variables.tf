@@ -23,7 +23,19 @@ variable "create_ec2_security_group" {
 }
 
 variable "create_redis" {
-  description = "Set to 1 to create redis, 0 to skip"
+  description = "Set 1 to create redis, 0 to skip"
+  type        = number
+  default     = 0
+}
+
+variable "create_rds" {
+  description = "Set 1 to create rds, 0 to skip"
+  type        = number
+  default     = 0
+}
+
+variable "create_rds_replica" {
+  description = "Set 1 to create rds replica, 0 to skip"
   type        = number
   default     = 0
 }
