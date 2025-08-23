@@ -92,9 +92,9 @@ locals {
       create      = var.create_ec2_security_group > 0
       name        = "${local.name}-web-sg"
       description = "Security group for web instances"
-      vpc_id      = module.vpc.vpc_id
+      vpc_id      = module.vpc["main"].vpc_id
 
-      ingress_cidr_blocks = [local.vpc.main.cidr]
+      ingress_cidr_blocks = [local.vpcs.main.cidr]
       ingress_rules       = ["ssh-tcp"]
       ingress_with_cidr_blocks = [
         {
@@ -116,7 +116,7 @@ locals {
           to_port     = 6379
           protocol    = "tcp"
           description = "Redis access"
-          cidr_blocks = local.vpc.main.cidr
+          cidr_blocks = local.vpcs.main.cidr
         }
       ]
       egress_rules = ["all-all"]
@@ -126,6 +126,7 @@ locals {
       create      = var.create_rds > 0
       name        = "${local.name}-rds"
       description = "Security group for rds postgres"
+      vpc_id      = module.vpc["main"].vpc_id
       ingress_with_cidr_blocks = [
         {
           from_port   = 5432
@@ -141,6 +142,7 @@ locals {
       create      = var.create_redis > 0
       name        = "${local.name}-redis"
       description = "Security group for redis-elasticache"
+      vpc_id      = module.vpc["main"].vpc_id
       ingress_with_cidr_blocks = [
         {
           from_port   = 6379
@@ -168,7 +170,7 @@ locals {
       identifier            = "${local.name}-postgres"
       engine                = "postgres"
       engine_version        = "15.7"
-      family                = "postgres14" # DB parameter group
+      family                = "postgres15" # DB parameter group
       major_engine_version  = "15.7"       # DB option group
       instance_class        = "db.t3.micro"
       allocated_storage     = 20
@@ -220,4 +222,39 @@ locals {
       apply_immediately  = true
     }
   }
+
+
+##################################################################################################################################
+#Secrets Manager Configuration
+##################################################################################################################################
+
+secrets_to_create = {
+  for k, v in local.secrets : k => v if v.create
+}
+
+secrets = {
+  rds_primary_credentials = {
+    create = var.create_rds > 0 || var.create_secrets > 0
+    name = "${local.name}-rds_primary_credentials_v0"
+    description = "RDS Postgres Primary DB Credentials"
+    recovery_window_in_days = 0       #Immediate deletion
+    secret_string = jsonencode ({
+      username = local.rds_instances["main"].username
+      password = "YOU_CAN_CHANGE_THIS_MANUALLY"       # This needs to be created prior to initializing RDS Primary
+    })
+    ignore_changes = true
+  }
+
+  ec2_private_key = {
+    create = var.create_ec2_instance > 0
+    name = "${local.name}-ec2_private_key_v0"
+    description = "SSH Private Key for ec2 instance"
+    ignore_changes = false
+  }
+}
+
+tags = {
+  Environment = local.environment
+  Project = local.application
+}
 }

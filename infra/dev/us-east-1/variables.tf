@@ -1,3 +1,8 @@
+
+##################################################################################################################################
+#Resources to Create
+##################################################################################################################################
+
 variable "create_vpc" {
   description = "Set 1 to create vpcs, 0 to skip"
   type        = number
@@ -38,4 +43,10 @@ variable "create_rds_replica" {
   description = "Set 1 to create rds replica, 0 to skip"
   type        = number
   default     = 0
+}
+
+variable "create_secrets" {
+  description = "Set 1 to create secrets for secret manager, 0 to skip"
+  type = number
+  default = 0
 }
