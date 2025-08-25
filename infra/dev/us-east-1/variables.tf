@@ -50,3 +50,9 @@ variable "create_secrets" {
   type = number
   default = 0
 }
+
+variable "create_asg" {
+  description = "Set 1 to create auto-scaling group, 0 to skip"
+  type = number
+  default = 0
+}

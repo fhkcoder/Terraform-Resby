@@ -37,27 +37,138 @@ locals {
 
 
 ##################################################################################################################################
-#EC2
+#Autoscaling Group
 ##################################################################################################################################
 
-  ec2_instances_to_create = {
-    for k, v in local.ec2_instances : k => v if v.create
+asg_to_create = {
+    for k, v in local.asg : k => v if v.create
   }
 
-  ec2_instances = {
-    web = {
-      create                      = var.create_ec2_instance > 0
-      name                        = "${local.name}-web"
-      instance_type               = "t2.micro"
-      associate_public_ip_address = true
-      subnet_type                 = "public"
+  asg = {
 
-      root_block_device = {
-        volume_size = 8
-        volume_type = "gp2"
-        encrypted   = true
+    create = var.create_asg > 0
+    name = "${application}-asg"
+    min_size                  = 1
+    max_size                  = 2
+    desired_capacity          = 1
+    wait_for_capacity_timeout = 0     #keep it 0 for dev/test not for prod
+   /*   health_check_type         = "ELB"
+  health_check_grace_period = 300 # wait 5 min before starting health checks
+  target_group_arns         = [aws_lb_target_group.example.arn]*/
+    vpc_zone_identifier       = [
+      local.vpcs["main"].private_subnets[0],
+      local.vpcs["main"].private_subnets[1]
+    ]
+
+    instance_refresh = {
+      strategy = "Rolling"
+      preferences = {
+        checkpoint_delay       = 600
+        checkpoint_percentages = [35, 70, 100]
+        instance_warmup        = 300
+        min_healthy_percentage = 50
+        max_healthy_percentage = 100
+      }
+      triggers = ["tag"]
+    }
+
+    # Launch template
+    launch_template_name        = "${application}-asg-launch-template"
+    launch_template_description = "Launch template for ASG resby project"
+    update_default_version      = true
+
+    image_id          = data.aws_ami.ubuntu.image_id
+    instance_type     = "t3.micro"
+    ebs_optimized     = true
+    enable_monitoring = false         # 5 minutes interval CW metrics for 5 mins free
+
+    # IAM role & instance profile
+    create_iam_instance_profile = true
+    iam_role_name               = "${application}-asg-ec2-iam-role"
+    iam_role_path               = "/ec2/"
+    iam_role_description        = "IAM role for ec2 instances resby project"
+    iam_role_tags = {
+      EC2IAMRole = "Yes"
+      Environment = "dev"
+    }
+    iam_role_policies = {
+      AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+      AmazonRDSReadOnlyAccess = "arn:aws:iam::aws:policy/AmazonRDSReadOnlyAccess"
+      AmazonElastiCacheReadOnlyAccess = "arn:aws:iam::aws:policy/AmazonElastiCacheReadOnlyAccess"
+    }
+
+    block_device_mappings = [
+      {
+        # Root volume
+        device_name = "/dev/xvda"
+        no_device   = 0
+        ebs = {
+          delete_on_termination = true
+          encrypted             = true
+          volume_size           = 20
+          volume_type           = "gp3"
+        }
+      }
+    ]
+
+    cpu_options = {
+      core_count       = 1
+      threads_per_core = 1
+    }
+
+    credit_specification = {
+      cpu_credits = "standard"
+    }
+
+    instance_market_options = {
+      market_type = "spot"
+      spot_options = {
+        block_duration_minutes = 60
       }
     }
+
+    # This will ensure imdsv2 is enabled, required, and a single hop which is aws security
+    # best practices
+    # See https://docs.aws.amazon.com/securityhub/latest/userguide/autoscaling-controls.html#autoscaling-4
+    metadata_options = {
+      http_endpoint               = "enabled"
+      http_tokens                 = "required"
+      http_put_response_hop_limit = 1
+    }
+
+    network_interfaces = [
+      {
+        delete_on_termination = true
+        description           = "eth0"
+        device_index          = 0
+        security_groups       = [local.security_groups["web_sg"].id]
+      }
+    ]
+
+    placement = {
+      availability_zone = data.aws_availability_zones.azs
+    }
+
+    tag_specifications = [
+      {
+        resource_type = "instance"
+        tags          = { WhatAmI = "Instance" }
+      },
+      {
+        resource_type = "volume"
+        tags          = { WhatAmI = "Volume" }
+      },
+      {
+        resource_type = "spot-instances-request"
+        tags          = { WhatAmI = "SpotInstanceRequest" }
+      }
+    ]
+
+    tags = {
+      Environment = local.environment
+      Project     = local.application
+    }
+  }
   }
 
 ##################################################################################################################################
@@ -171,7 +282,7 @@ locals {
       engine                = "postgres"
       engine_version        = "15.7"
       family                = "postgres15" # DB parameter group
-      major_engine_version  = "15.7"       # DB option group
+      major_engine_version  = "15"       # DB option group
       instance_class        = "db.t3.micro"
       allocated_storage     = 20
       max_allocated_storage = 100
