@@ -77,7 +77,6 @@ asg_to_create = {
     launch_template_description = "Launch template for ASG resby project"
     update_default_version      = true
 
-    image_id          = data.aws_ami.ubuntu.image_id
     instance_type     = "t3.micro"
     ebs_optimized     = true
     enable_monitoring = false         # 5 minutes interval CW metrics for 5 mins free
@@ -89,7 +88,7 @@ asg_to_create = {
     iam_role_description        = "IAM role for ec2 instances resby project"
     iam_role_tags = {
       EC2IAMRole = "Yes"
-      Environment = "dev"
+      Environment = local.environment
     }
     iam_role_policies = {
       AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
@@ -168,7 +167,6 @@ asg_to_create = {
       Environment = local.environment
       Project     = local.application
     }
-  }
   }
 
 ##################################################################################################################################
