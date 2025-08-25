@@ -56,3 +56,9 @@ variable "create_asg" {
   type = number
   default = 0
 }
+
+variable "create_elb" {
+  description = "Set 1 to create elb, 0 to skip"
+  type = number
+  default = 0
+}
